@@ -1,0 +1,13 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "dctl (docker)",
+      "Group": "Servers",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "dctl",
+      "Username": "dctl",
+      "SSLMode": "prefer"
+    }
+  }
+}

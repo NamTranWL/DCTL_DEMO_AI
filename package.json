@@ -1,0 +1,42 @@
+{
+  "name": "dctl",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Đi chợ Tiện lợi — monorepo (backend NestJS, mobile React Native/Expo, shared types)",
+  "packageManager": "pnpm@12.15.0",
+  "engines": {
+    "node": ">=22.12.0",
+    "pnpm": ">=10"
+  },
+  "scripts": {
+    "prepare": "husky",
+    "build:shared": "pnpm --filter @dctl/shared build",
+    "lint": "pnpm build:shared && pnpm -r --parallel run lint",
+    "lint:fix": "pnpm build:shared && pnpm -r --parallel run lint:fix",
+    "typecheck": "pnpm build:shared && pnpm -r run typecheck",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "pnpm build:shared && pnpm -r run test",
+    "test:backend": "pnpm build:shared && pnpm --filter @dctl/backend test",
+    "dev:backend": "pnpm build:shared && pnpm --filter @dctl/backend start:dev",
+    "dev:mobile": "pnpm --filter @dctl/mobile start",
+    "infra:up": "docker compose up -d",
+    "infra:down": "docker compose down",
+    "infra:logs": "docker compose logs -f"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "21.2.4",
+    "@commitlint/config-conventional": "21.2.4",
+    "@eslint/js": "9.39.5",
+    "eslint": "9.39.5",
+    "eslint-config-prettier": "10.1.8",
+    "eslint-plugin-react": "7.37.5",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "globals": "17.13.0",
+    "husky": "9.1.7",
+    "lint-staged": "17.6.0",
+    "prettier": "3.9.10",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "8.72.1"
+  }
+}
