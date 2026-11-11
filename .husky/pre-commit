@@ -1,3 +1,0 @@
-pnpm run build:shared
-pnpm exec lint-staged --max-arg-length 4000
-
