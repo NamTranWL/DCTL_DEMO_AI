@@ -1,3 +1,6 @@
 // Public entry of @dctl/shared.
-// Enums (B3) and domain event constants (B6) are added here as the base grows.
+export * from './domain';
+export * from './enums';
+export * from './events';
 export * from './realtime';
+export * from './text';

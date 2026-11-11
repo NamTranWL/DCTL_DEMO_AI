@@ -74,6 +74,20 @@ export default tseslint.config(
       // so `import type` must not be forced for injected classes.
       '@typescript-eslint/consistent-type-imports': 'off',
       '@typescript-eslint/no-extraneous-class': 'off',
+      // Entities extend our own src/database/base.entity.ts (Repository pattern only).
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: 'typeorm',
+              importNames: ['BaseEntity'],
+              message:
+                'Use BaseEntity from src/database/base.entity.ts (active record is not used).',
+            },
+          ],
+        },
+      ],
     },
   },
 

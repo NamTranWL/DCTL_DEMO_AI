@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "description": "Đi chợ Tiện lợi — monorepo (backend NestJS, mobile React Native/Expo, shared types)",
-  "packageManager": "pnpm@12.15.0",
+  "packageManager": "pnpm@10.34.9",
   "engines": {
     "node": ">=22.12.0",
-    "pnpm": ">=10"
+    "pnpm": ">=10.34 <11"
   },
   "scripts": {
     "prepare": "husky",
@@ -18,8 +18,15 @@
     "format:check": "prettier --check .",
     "test": "pnpm build:shared && pnpm -r run test",
     "test:backend": "pnpm build:shared && pnpm --filter @dctl/backend test",
+    "test:cov": "pnpm build:shared && pnpm --filter @dctl/backend test:cov",
+    "test:e2e": "pnpm build:shared && pnpm --filter @dctl/backend test:e2e",
     "dev:backend": "pnpm build:shared && pnpm --filter @dctl/backend start:dev",
     "dev:mobile": "pnpm --filter @dctl/mobile start",
+    "migration:generate": "pnpm --filter @dctl/backend migration:generate",
+    "migration:run": "pnpm --filter @dctl/backend migration:run",
+    "migration:revert": "pnpm --filter @dctl/backend migration:revert",
+    "migration:check": "pnpm --filter @dctl/backend migration:check",
+    "seed": "pnpm build:shared && pnpm --filter @dctl/backend seed",
     "infra:up": "docker compose up -d",
     "infra:down": "docker compose down",
     "infra:logs": "docker compose logs -f"

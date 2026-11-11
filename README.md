@@ -18,7 +18,7 @@ Nguồn sự thật duy nhất cho nghiệp vụ, tên gọi và kiến trúc: `
 ## Yêu cầu môi trường
 
 - **Node.js ≥ 22.12** (xem `.nvmrc`)
-- **pnpm 12** — bật qua Corepack: `corepack enable` (phiên bản lấy từ trường `packageManager`)
+- **pnpm 10.34.9** — qua Corepack (phiên bản lấy từ trường `packageManager`). Nếu `pnpm -v` chưa chạy được: `corepack enable` (Windows + nvm-windows: mở PowerShell **Run as Administrator**) hoặc `npm install -g pnpm@10.34.9`. Không dùng pnpm 11/12 — corepack đi kèm Node 22 chưa chạy được các bản này.
 - **Docker Desktop** (Postgres, Redis, MailHog, pgAdmin)
 - **Git**
 - Chạy app mobile: ứng dụng **Expo Go** trên điện thoại, hoặc Android Studio (emulator) / Xcode (simulator)
@@ -26,8 +26,8 @@ Nguồn sự thật duy nhất cho nghiệp vụ, tên gọi và kiến trúc: `
 ## Bắt đầu nhanh
 
 ```bash
-# 1. Cài dependencies (tự cài husky hooks)
-corepack enable
+# 1. Cài dependencies (tự cài husky hooks; cần đã có thư mục .git)
+pnpm -v                  # phải ra 10.34.9
 pnpm install
 
 # 2. Biến môi trường
@@ -38,8 +38,12 @@ cp apps/mobile/.env.example apps/mobile/.env
 pnpm infra:up            # = docker compose up -d
 docker compose ps        # tất cả phải ở trạng thái "healthy"
 
-# 4. Chạy
-pnpm dev:backend         # http://localhost:3000
+# 4. Tạo bảng + dữ liệu mẫu (tài khoản demo: noitro / Demo@123, admin / Admin@123)
+pnpm migration:run
+pnpm seed
+
+# 5. Chạy
+pnpm dev:backend         # API http://localhost:3000/api · Swagger /api/docs · Health /health
 pnpm dev:mobile          # Expo dev server, quét QR bằng Expo Go
 ```
 
@@ -59,17 +63,51 @@ Dừng: `pnpm infra:down` · Xoá cả dữ liệu: `docker compose down -v`.
 
 ## Lệnh thường dùng
 
-| Lệnh                                   | Mục đích                         |
-| -------------------------------------- | -------------------------------- |
-| `pnpm lint` / `pnpm lint:fix`          | ESLint cho mọi workspace         |
-| `pnpm typecheck`                       | `tsc --noEmit` cho mọi workspace |
-| `pnpm format` / `pnpm format:check`    | Prettier                         |
-| `pnpm test` / `pnpm test:backend`      | Jest                             |
-| `pnpm --filter @dctl/backend test:e2e` | Test e2e backend (Supertest)     |
-| `pnpm --filter @dctl/backend <script>` | Chạy script riêng của backend    |
-| `pnpm --filter @dctl/mobile android`   | Mở app trên Android emulator     |
+| Lệnh                                                    | Mục đích                                          |
+| ------------------------------------------------------- | ------------------------------------------------- |
+| `pnpm lint` / `pnpm lint:fix`                           | ESLint cho mọi workspace                          |
+| `pnpm typecheck`                                        | `tsc --noEmit` cho mọi workspace                  |
+| `pnpm format` / `pnpm format:check`                     | Prettier                                          |
+| `pnpm test` / `pnpm test:backend`                       | Jest                                              |
+| `pnpm test:e2e`                                         | Test e2e backend (cần Postgres + Redis đang chạy) |
+| `pnpm migration:generate src/database/migrations/<Tên>` | Sinh migration từ thay đổi entity                 |
+| `pnpm migration:run` / `migration:revert`               | Chạy / hoàn tác migration                         |
+| `pnpm migration:check`                                  | Báo lỗi nếu entity đã sửa mà chưa sinh migration  |
+| `pnpm seed`                                             | Nạp dữ liệu mẫu (chạy lại nhiều lần an toàn)      |
+| `pnpm --filter @dctl/backend <script>`                  | Chạy script riêng của backend                     |
+| `pnpm --filter @dctl/mobile android`                    | Mở app trên Android emulator                      |
 
 `lint`, `typecheck`, `test` tự build `packages/shared` trước (backend dùng bản build `dist/`, mobile đọc thẳng `src/` qua Metro).
+
+## API nhanh
+
+Swagger: <http://localhost:3000/api/docs> (bấm **Authorize**, dán `accessToken`).
+
+```bash
+# Đăng nhập tài khoản demo → lấy accessToken
+curl -X POST localhost:3000/api/auth/login -H "content-type: application/json" \
+  -d '{"login":"noitro","password":"Demo@123"}'
+# Gia đình của tôi
+curl localhost:3000/api/families/me -H "authorization: Bearer <accessToken>"
+```
+
+Luồng 5.1 (danh sách mua sắm → kho), chi tiết `apps/backend/src/modules/shopping/README.md`:
+
+```bash
+# noitro (nội trợ) lập danh sách; thanhvien1 đánh dấu đã mua rồi hoàn tất → tự nhập kho
+POST /api/shopping-lists                             {"targetDate":"<hôm nay>","items":[...]}
+POST /api/shopping-lists/:listId/items/:itemId/purchase   {"version":1}
+POST /api/shopping-lists/:listId/complete            {}
+GET  /api/fridge/items?q=ca chua                     # tìm không dấu
+POST /api/fridge/consume                             {"items":[{"foodId":"…","quantity":300,"unitId":"<g>"}]}
+```
+
+Realtime: Socket.IO `ws://localhost:3000/realtime`, gửi `auth: { token: accessToken }` khi kết nối
+(chi tiết `apps/backend/src/infrastructure/README.md`). Thử email: đăng nhập `admin`, gọi
+`POST /api/admin/notifications/test`, mở MailHog <http://localhost:8025>.
+
+Mọi endpoint cần JWT trừ `@Public()` (đăng ký, đăng nhập, refresh, logout, health).
+Mã mời gia đình demo: `DEMO2026`. Chi tiết: `apps/backend/src/modules/{auth,families}/README.md`.
 
 ## Cấu trúc thư mục
 

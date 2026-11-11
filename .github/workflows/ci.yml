@@ -84,8 +84,19 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
-      - name: Test backend (unit)
-        run: pnpm test:backend -- --ci
+      - name: Database — run migrations on an empty database
+        run: pnpm migration:run
+
+      - name: Database — entities match migrations (no schema drift)
+        run: pnpm migration:check
+
+      - name: Database — seed twice (must be idempotent)
+        run: |
+          pnpm seed
+          pnpm seed
+
+      - name: Test backend (unit + coverage ≥ 80% on shopping/fridge services)
+        run: pnpm test:cov --ci
 
       - name: Test backend (e2e)
-        run: pnpm --filter @dctl/backend test:e2e -- --ci
+        run: pnpm --filter @dctl/backend test:e2e --ci
